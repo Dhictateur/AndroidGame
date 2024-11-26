@@ -8,12 +8,15 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import io.github.eac4.Main;
 import io.github.eac4.helpers.AssetManager;
 import io.github.eac4.helpers.InputHandler;
+import io.github.eac4.objects.Coin;
 import io.github.eac4.objects.Player;
 import io.github.eac4.utils.Settings;
 
@@ -25,6 +28,9 @@ public class GameScreen implements Screen {
 
     private ShapeRenderer shapeRenderer;
     private Batch batch;
+
+    private Array<Coin> coins; // Lista para almacenar las monedas
+    private int coinsCollected;
 
     public GameScreen (Batch prevBatch, Viewport prevViewport) {
 
@@ -48,10 +54,29 @@ public class GameScreen implements Screen {
 
         // Assignem com a gestor d'entrada la classe InputHandler
         Gdx.input.setInputProcessor(new InputHandler(this));
+
+        coins = new Array<>(); // Inicializa la lista de monedas
+        coinsCollected = 0;
+    }
+
+    private Vector2 generateRandomPosition(float worldWidth, float worldHeight) {
+        float x = (float) Math.random() * worldWidth;  // Genera una posición X aleatoria
+        float y = (float) Math.random() * worldHeight; // Genera una posición Y aleatoria
+        return new Vector2(x, y);
+    }
+
+    private void spawnCoins(int count, float worldWidth, float worldHeight) {
+        for (int i = 0; i < count; i++) {
+            Vector2 position = generateRandomPosition(worldWidth, worldHeight);
+            Coin coin = new Coin(position.x, position.y, Settings.COIN_WIDTH, Settings.COIN_HEIGHT);
+            coins.add(coin); // Añade la moneda a la lista
+            stage.addActor(coin); // Añade la moneda al escenario
+        }
     }
 
     @Override
     public void show() {
+        spawnCoins(Settings.INITIAL_COIN_COUNT, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
     }
 
     @Override
@@ -85,6 +110,22 @@ public class GameScreen implements Screen {
         // Configura la cámara para el renderer del mapa
         mapRenderer.setView(camera);
         mapRenderer.render(); // Renderiza el fondo (mapa)
+
+        Array<Coin> coinsToRemove = new Array<>();
+
+        for (Coin coin : coins) {
+            if (coin.getCollisionRect().overlaps(player.getCollisionRect())) {
+                coinsToRemove.add(coin); // Marcar la moneda para eliminar
+                coinsCollected++; // Incrementar el puntaje
+            }
+        }
+
+        // Remover monedas recogidas del escenario y de la lista
+        for (Coin coin : coinsToRemove) {
+            coin.remove(); // Elimina la moneda del escenario
+            coins.removeValue(coin, true); // Elimina la moneda de la lista
+        }
+
         // Dibuixem tots els actors de l'stage
         stage.act(delta);
         stage.draw();

@@ -29,6 +29,8 @@ public class AssetManager {
     public static Animation<TextureRegion> playerLeftAnim;
     public static Animation<TextureRegion> playerRightAnim;
 
+    public  static Animation<TextureRegion> coinAnim;
+
     public static void load() {
         sheet = new Texture("sheet.png");
         sheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -42,6 +44,8 @@ public class AssetManager {
         TextureRegion[] leftFrames = new TextureRegion[3];
         TextureRegion[] rightFrames = new TextureRegion[3];
 
+        TextureRegion[] coinFrames = new TextureRegion[3];
+
         for (int i = 0; i < 3; i++) {
             downFrames[i] = new TextureRegion(sheet, i * 16, 0, 16, 24);
             downFrames[i].flip(false, true);
@@ -54,6 +58,9 @@ public class AssetManager {
 
             rightFrames[i] = new TextureRegion(sheet, i * 16, 48, 16, 24);
             rightFrames[i].flip(true, true); // Flip horizontal
+
+            coinFrames[i] = new TextureRegion(sheet, i * 16, 72, 16, 24);
+            coinFrames[i].flip(false, true);
         }
 
         // Crear las animaciones
@@ -61,6 +68,8 @@ public class AssetManager {
         playerUpAnim = new Animation<>(DURATION, upFrames);
         playerLeftAnim = new Animation<>(DURATION, leftFrames);
         playerRightAnim = new Animation<>(DURATION, rightFrames);
+
+        coinAnim = new Animation<>(DURATION, coinFrames);
 
         try {
             // Carga el mapa desde un archivo .tmx
