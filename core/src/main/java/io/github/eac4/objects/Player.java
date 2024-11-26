@@ -25,12 +25,15 @@ public class Player extends Actor {
     private int width, height;
     private int direction;
 
+    private float stateTime;
+
     // Constructor de la clase Player
     public Player(float x, float y, int width, int height) {
         this.width = width;
         this.height = height;
         position = new Vector2(x, y);
         collisionRect = new Rectangle();
+        stateTime = 0f;
 
         direction = PLAYER_STILL;
 
@@ -42,24 +45,39 @@ public class Player extends Actor {
     @Override
     public void act(float delta) {
         super.act(delta);
+
+        stateTime += delta;
+
+        float nextX = position.x;
+        float nextY = position.y;
+
+        // Calcular la nueva posición basada en la dirección
         switch (direction) {
             case PLAYER_DOWN:
-                this.position.y += Settings.PLAYER_VELOCITY * delta;  // Mover hacia arriba
+                nextY += Settings.PLAYER_VELOCITY * delta;
                 break;
             case PLAYER_UP:
-                this.position.y -= Settings.PLAYER_VELOCITY * delta;  // Mover hacia abajo
+                nextY -= Settings.PLAYER_VELOCITY * delta;
                 break;
             case PLAYER_RIGHT:
-                this.position.x += Settings.PLAYER_VELOCITY * delta;  // Mover hacia la derecha
+                nextX += Settings.PLAYER_VELOCITY * delta;
                 break;
             case PLAYER_LEFT:
-                this.position.x -= Settings.PLAYER_VELOCITY * delta;  // Mover hacia la izquierda
+                nextX -= Settings.PLAYER_VELOCITY * delta;
                 break;
             case PLAYER_STILL:
                 break;
         }
+
+        // Limitar la posición a los bordes del mapa
+        nextX = Math.max(0, Math.min(nextX, Settings.GAME_WIDTH - width)); // Limitar en X
+        nextY = Math.max(0, Math.min(nextY, Settings.GAME_HEIGHT - height)); // Limitar en Y
+
+        // Actualizar la posición si es válida
+        position.set(nextX, nextY);
+
         // Actualizar el rectángulo de colisión
-        collisionRect.set(position.x, position.y + 3, width, 10);
+        collisionRect.set(position.x, position.y, width, height);
         setBounds(position.x, position.y, width, height);
     }
 
@@ -110,13 +128,13 @@ public class Player extends Actor {
             case PLAYER_STILL:
                 return AssetManager.player;
             case PLAYER_UP:
-                return AssetManager.playerUp;
+                return AssetManager.playerUpAnim.getKeyFrame(stateTime, true);
             case PLAYER_DOWN:
-                return AssetManager.player;
+                return AssetManager.playerDownAnim.getKeyFrame(stateTime, true);
             case PLAYER_RIGHT:
-                return  AssetManager.playerRight;
+                return  AssetManager.playerRightAnim.getKeyFrame(stateTime, true);
             case PLAYER_LEFT:
-                return AssetManager.playerLeft;
+                return AssetManager.playerLeftAnim.getKeyFrame(stateTime, true);
             default:
                 return AssetManager.player;
         }

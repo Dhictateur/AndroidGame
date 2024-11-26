@@ -9,7 +9,7 @@ public class Settings {
     public static final int CAMERA_WIDTH = 15;
     public static final int CAMERA_HEIGHT = 10;
 
-    public static final float PLAYER_VELOCITY = 15;
+    public static final float PLAYER_VELOCITY = 7;
     public static final int PLAYER_WIDTH = 1;
     public static final int PLAYER_HEIGHT = 2;
     public static final float PLAYER_STARTY = GAME_HEIGHT/2 - PLAYER_HEIGHT/2;

@@ -2,6 +2,7 @@ package io.github.eac4.helpers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -21,6 +22,13 @@ public class AssetManager {
     public static TiledMap background;
     public static Music backgroundMusic;
 
+    private static final float DURATION = 0.17f;
+
+    public static Animation<TextureRegion> playerDownAnim;
+    public static Animation<TextureRegion> playerUpAnim;
+    public static Animation<TextureRegion> playerLeftAnim;
+    public static Animation<TextureRegion> playerRightAnim;
+
     public static void load() {
         sheet = new Texture("sheet.png");
         sheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -28,14 +36,31 @@ public class AssetManager {
         player = new TextureRegion(sheet, 16, 0, 16, 24);
         player.flip(false, true);
 
-        playerUp = new TextureRegion(sheet, 48, 0, 16, 24);
-        playerUp.flip(false, true);
+        // Extraer frames para las animaciones
+        TextureRegion[] downFrames = new TextureRegion[3];
+        TextureRegion[] upFrames = new TextureRegion[3];
+        TextureRegion[] leftFrames = new TextureRegion[3];
+        TextureRegion[] rightFrames = new TextureRegion[3];
 
-        playerLeft = new TextureRegion(sheet, 80, 0, 16, 24);
-        playerLeft.flip(false, true);
+        for (int i = 0; i < 3; i++) {
+            downFrames[i] = new TextureRegion(sheet, i * 16, 0, 16, 24);
+            downFrames[i].flip(false, true);
 
-        playerRight = new TextureRegion(sheet, 80, 0, 16, 24);
-        playerRight.flip(true, true);
+            upFrames[i] = new TextureRegion(sheet, i * 16, 24, 16, 24);
+            upFrames[i].flip(false, true);
+
+            leftFrames[i] = new TextureRegion(sheet, i * 16, 48, 16, 24);
+            leftFrames[i].flip(false, true);
+
+            rightFrames[i] = new TextureRegion(sheet, i * 16, 48, 16, 24);
+            rightFrames[i].flip(true, true); // Flip horizontal
+        }
+
+        // Crear las animaciones
+        playerDownAnim = new Animation<>(DURATION, downFrames);
+        playerUpAnim = new Animation<>(DURATION, upFrames);
+        playerLeftAnim = new Animation<>(DURATION, leftFrames);
+        playerRightAnim = new Animation<>(DURATION, rightFrames);
 
         try {
             // Carga el mapa desde un archivo .tmx
