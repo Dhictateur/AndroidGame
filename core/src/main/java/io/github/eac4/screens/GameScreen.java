@@ -117,6 +117,12 @@ public class GameScreen implements Screen {
             if (coin.getCollisionRect().overlaps(player.getCollisionRect())) {
                 coinsToRemove.add(coin); // Marcar la moneda para eliminar
                 coinsCollected++; // Incrementar el puntaje
+
+                // Generar una nueva posición aleatoria para la nueva moneda
+                Vector2 newPosition = generateRandomPosition(worldWidth, worldHeight);
+                Coin newCoin = new Coin(newPosition.x, newPosition.y, Settings.COIN_WIDTH, Settings.COIN_HEIGHT);
+                coins.add(newCoin); // Añadir la nueva moneda a la lista
+                stage.addActor(newCoin); // Añadir la nueva moneda al escenario
             }
         }
 
