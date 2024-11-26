@@ -7,16 +7,15 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import io.github.eac4.helpers.AssetManager;
-import io.github.eac4.utils.Settings;
 
-public class Coin extends Actor {
+public class TimeCoin extends Actor {
 
     private Rectangle collisionRect;
     private Vector2 position;
     private int width, height;
     private float stateTime;
 
-    public Coin(float x, float y, int width, int height) {
+    public TimeCoin(float x, float y, int width, int height) {
         this.width = width;
         this.height = height;
         position = new Vector2(x, y);
@@ -28,7 +27,7 @@ public class Coin extends Actor {
         return collisionRect;
     }
 
-    public TextureRegion getCoinTexture() {
+    public TextureRegion getTimeCoinTexture() {
         return AssetManager.coinAnim.getKeyFrame(stateTime, true);
     }
 
@@ -41,7 +40,7 @@ public class Coin extends Actor {
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
-        batch.draw(getCoinTexture(), position.x, position.y, width, height);
+        batch.draw(getTimeCoinTexture(), position.x, position.y, width, height);
         collisionRect.set(position.x, position.y, width, height);
     }
 }
