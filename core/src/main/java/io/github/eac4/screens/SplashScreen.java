@@ -64,7 +64,7 @@ public class SplashScreen implements Screen {
         // Si es fa clic en la pantalla, canviem la pantalla
         if (Gdx.input.isTouched()) {
             Gdx.app.log("SplashScreen", "El juego ha detectado un toque.");
-            game.setScreen(new GameScreen(stage.getBatch(), stage.getViewport()));
+            game.setScreen(new GameScreen(game, stage.getBatch(), stage.getViewport()));
             dispose();
         }
     }

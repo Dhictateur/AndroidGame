@@ -1,8 +1,12 @@
 package io.github.eac4.helpers;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -31,6 +35,8 @@ public class AssetManager {
 
     public  static Animation<TextureRegion> coinAnim;
     public  static Animation<TextureRegion> timeCoinAnim;
+
+    public static BitmapFont font;
 
     public static void load() {
         sheet = new Texture("sheet.png");
@@ -75,7 +81,7 @@ public class AssetManager {
         playerRightAnim = new Animation<>(DURATION, rightFrames);
 
         coinAnim = new Animation<>(DURATION, coinFrames);
-        timeCoinAnim = new Animation<>(DURATION, coinFrames);
+        timeCoinAnim = new Animation<>(DURATION, timeCoinFrames);
 
         try {
             // Carga el mapa desde un archivo .tmx
@@ -90,6 +96,10 @@ public class AssetManager {
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/theme.mp3"));
         backgroundMusic.setLooping(true); // Repetir la música
         backgroundMusic.setVolume(0.2f); // Establecer el volumen (ajusta según lo necesario)
+
+        FileHandle fontFile = Gdx.files.internal("font/font.fnt");
+        font = new BitmapFont(fontFile, true);
+        font.getData().setScale(0.05f);
     }
 
 
@@ -100,6 +110,8 @@ public class AssetManager {
         if (tiledMap != null) {
             tiledMap.dispose();
         }
+        if (font != null) {
+            font.dispose();
+        }
     }
-
 }

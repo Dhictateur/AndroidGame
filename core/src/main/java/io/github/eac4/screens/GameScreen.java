@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
@@ -11,17 +13,19 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.Viewport;
-
 import io.github.eac4.Main;
 import io.github.eac4.helpers.AssetManager;
 import io.github.eac4.helpers.InputHandler;
 import io.github.eac4.objects.Coin;
+import io.github.eac4.objects.TimeCoin;
 import io.github.eac4.objects.Player;
 import io.github.eac4.utils.Settings;
 
 public class GameScreen implements Screen {
 
+    private final Main game;
     private Stage stage;
     private Player player;
     private TiledMapRenderer mapRenderer; // Para el fondo
@@ -32,7 +36,14 @@ public class GameScreen implements Screen {
     private Array<Coin> coins; // Lista para almacenar las monedas
     private int coinsCollected;
 
-    public GameScreen (Batch prevBatch, Viewport prevViewport) {
+    private Array<TimeCoin> timeCoins;
+
+    private int timeRemaining; // Tiempo restante en segundos
+    private float timeAccumulator; // Acumulador para gestionar el deltaTime
+
+
+    public GameScreen (Main game, Batch prevBatch, Viewport prevViewport) {
+        this.game = game;
 
         AssetManager.backgroundMusic.play();
 
@@ -57,6 +68,12 @@ public class GameScreen implements Screen {
 
         coins = new Array<>(); // Inicializa la lista de monedas
         coinsCollected = 0;
+
+        timeCoins = new Array<>();
+
+        // Inicializa el temporizador
+        timeRemaining = 60;
+        timeAccumulator = 0;
     }
 
     private Vector2 generateRandomPosition(float worldWidth, float worldHeight) {
@@ -74,13 +91,36 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void spawnTimeCoins (int count, float worldWidth, float worldHeight) {
+        for (int i = 0; i < count; i++) {
+            Vector2 position = generateRandomPosition(worldWidth, worldHeight);
+            TimeCoin coin = new TimeCoin(position.x, position.y, Settings.COIN_WIDTH, Settings.COIN_HEIGHT);
+            timeCoins.add(coin);
+            stage.addActor(coin);
+        }
+    }
+
     @Override
     public void show() {
         spawnCoins(Settings.INITIAL_COIN_COUNT, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+        spawnTimeCoins(Settings.INITIAL_COIN_COUNT, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
     }
 
     @Override
     public void render(float delta) {
+        // Actualizar el acumulador y el temporizador
+        timeAccumulator += delta;
+        if (timeAccumulator >= 1f) {
+            timeRemaining--; // Resta un segundo
+            timeAccumulator = 0;
+        }
+
+        // Verifica si el tiempo se ha agotado
+        if (timeRemaining <= 0) {
+            game.setScreen(new SplashScreen(game)); // Cambia a SplashScreen
+            dispose();
+            return; // Sal del método para evitar errores
+        }
 
         // Actualiza la posición de la cámara para seguir al jugador
         OrthographicCamera camera = (OrthographicCamera) stage.getViewport().getCamera();
@@ -132,9 +172,43 @@ public class GameScreen implements Screen {
             coins.removeValue(coin, true); // Elimina la moneda de la lista
         }
 
+        Array<TimeCoin> timeCoinsToRemove = new Array<>();
+
+        for (TimeCoin coin : timeCoins) {
+            if (coin.getCollisionRect().overlaps(player.getCollisionRect())) {
+                timeCoinsToRemove.add(coin); // Marcar la moneda para eliminar
+                timeRemaining++;
+
+                // Generar una nueva posición aleatoria para la nueva moneda
+                Vector2 newPosition = generateRandomPosition(worldWidth, worldHeight);
+                TimeCoin newCoin = new TimeCoin(newPosition.x, newPosition.y, Settings.COIN_WIDTH, Settings.COIN_HEIGHT);
+                timeCoins.add(newCoin); // Añadir la nueva moneda a la lista
+                stage.addActor(newCoin); // Añadir la nueva moneda al escenario
+            }
+        }
+
+        // Remover monedas recogidas del escenario y de la lista
+        for (TimeCoin coin : timeCoinsToRemove) {
+            coin.remove(); // Elimina la moneda del escenario
+            timeCoins.removeValue(coin, true); // Elimina la moneda de la lista
+        }
+
         // Dibuixem tots els actors de l'stage
         stage.act(delta);
         stage.draw();
+        batch.begin();
+
+        float pointTextX = camera.position.x - camera.viewportWidth / 2 + 0.5f;
+        float pintTextY = camera.position.y + camera.viewportHeight / 2 - 9;
+
+        float TimeTextX = camera.position.x - camera.viewportWidth / 2 + 12.5f;
+        float TimeTextY = camera.position.y + camera.viewportHeight / 2 - 9;
+
+        // Dibuja el texto en la pantalla
+        AssetManager.font.setColor(Color.WHITE);  // Establece el color del texto (puedes cambiarlo)
+        AssetManager.font.draw(batch, "" + coinsCollected, pointTextX, pintTextY);
+        AssetManager.font.draw(batch, "" + timeRemaining, TimeTextX, TimeTextY);
+        batch.end();
     }
 
     @Override
@@ -157,7 +231,8 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        stage.dispose();
+        shapeRenderer.dispose();
     }
 
     public Player getPlayer() {

@@ -28,7 +28,7 @@ public class TimeCoin extends Actor {
     }
 
     public TextureRegion getTimeCoinTexture() {
-        return AssetManager.coinAnim.getKeyFrame(stateTime, true);
+        return AssetManager.timeCoinAnim.getKeyFrame(stateTime, true);
     }
 
     @Override
