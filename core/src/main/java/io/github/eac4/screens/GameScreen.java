@@ -104,6 +104,14 @@ public class GameScreen implements Screen {
     public void show() {
         spawnCoins(Settings.INITIAL_COIN_COUNT, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
         spawnTimeCoins(Settings.INITIAL_COIN_COUNT, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+
+        // Temporizador para disparar balas
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                player.shoot(); // Dispara una bala
+            }
+        }, 0, 1);
     }
 
     @Override

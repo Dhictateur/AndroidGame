@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.utils.Array;
 
 import io.github.eac4.helpers.AssetManager;
 import io.github.eac4.utils.Settings;
@@ -27,6 +28,8 @@ public class Player extends Actor {
 
     private float stateTime;
 
+    private Array<Bullet> bullets;
+
     // Constructor de la clase Player
     public Player(float x, float y, int width, int height) {
         this.width = width;
@@ -40,6 +43,8 @@ public class Player extends Actor {
         // Definir la posición inicial del jugador
         setBounds(position.x, position.y, width, height);
         setTouchable(Touchable.enabled);
+
+        bullets = new Array<>();
     }
 
     @Override
@@ -144,5 +149,26 @@ public class Player extends Actor {
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
         batch.draw(getPlayerTexture(), position.x, position.y, width, height);
+    }
+
+    public void shoot() {
+        float bulletSpeed = 15f; // Velocidad de la bala
+        float bulletWidth = Settings.BULLET_WIDTH;
+        float bulletHeight = Settings.BULLET_HEIGHT;
+
+        // Obtén la posición actual del jugador
+        float playerCenterX = this.getX() + this.getWidth() / 2 - bulletWidth / 2;
+        float playerCenterY = this.getY() + this.getHeight() / 2 - bulletHeight / 2;
+
+        // Generar una dirección aleatoria para la bala
+        float randomAngle = (float) (Math.random() * 2 * Math.PI); // Ángulo aleatorio en radianes
+        float dx = (float) Math.cos(randomAngle) * bulletSpeed;    // Velocidad en X
+        float dy = (float) Math.sin(randomAngle) * bulletSpeed;    // Velocidad en Y
+
+        // Crear la bala usando la posición actual del jugador
+        Bullet bullet = new Bullet(playerCenterX, playerCenterY, bulletWidth, bulletHeight, dx, dy);
+
+        bullets.add(bullet); // Añadir la bala a la lista de balas
+        getStage().addActor(bullet); // Añadir la bala al escenario
     }
 }
