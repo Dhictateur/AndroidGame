@@ -23,6 +23,7 @@ import io.github.eac4.objects.Bullet;
 import io.github.eac4.objects.Coin;
 import io.github.eac4.objects.TimeCoin;
 import io.github.eac4.objects.Player;
+import io.github.eac4.objects.Target;
 import io.github.eac4.utils.Settings;
 
 public class GameScreen implements Screen {
@@ -43,6 +44,9 @@ public class GameScreen implements Screen {
     private int timeRemaining; // Tiempo restante en segundos
     private float timeAccumulator; // Acumulador para gestionar el deltaTime
 
+    private Array<Target> targets;  // Lista para almacenar los 5 targets
+    private int elapsedTime;
+
 
     public GameScreen (Main game, Batch prevBatch, Viewport prevViewport) {
         this.game = game;
@@ -60,7 +64,7 @@ public class GameScreen implements Screen {
         mapRenderer = new OrthogonalTiledMapRenderer(tiledMap, 1 / 32f);
 
         player = new Player(Settings.PLAYER_STARTX, Settings.PLAYER_STARTY,
-                            Settings.PLAYER_WIDTH, Settings.PLAYER_HEIGHT);
+            Settings.PLAYER_WIDTH, Settings.PLAYER_HEIGHT);
         stage.addActor(player);
         // Donem nom a l'Actor
         player.setName("player");
@@ -76,12 +80,23 @@ public class GameScreen implements Screen {
         // Inicializa el temporizador
         timeRemaining = 60;
         timeAccumulator = 0;
+
+        targets = new Array<>(); // Inicializa la lista de targets
     }
 
     private Vector2 generateRandomPosition(float worldWidth, float worldHeight) {
         float x = (float) Math.random() * worldWidth;  // Genera una posición X aleatoria
         float y = (float) Math.random() * worldHeight; // Genera una posición Y aleatoria
         return new Vector2(x, y);
+    }
+
+    private void spawnTargets(int count, float worldWidth, float worldHeight) {
+        for (int i = 0; i < count; i++) {
+            Vector2 position = generateRandomPosition(worldWidth, worldHeight);
+            Target target = new Target(position.x, position.y, Settings.TARGET_WIDTH, Settings.TARGET_HEIGHT);
+            targets.add(target); // Añadir el Target a la lista
+            stage.addActor(target); // Añadir el Target al escenario
+        }
     }
 
     private void spawnCoins(int count, float worldWidth, float worldHeight) {
@@ -104,6 +119,9 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
+        Vector2 targetPosition = generateRandomPosition(Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+        spawnTargets(5, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);  // Genera 5 Targets
+
         spawnCoins(Settings.INITIAL_COIN_COUNT, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
         spawnTimeCoins(Settings.INITIAL_COIN_COUNT, Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
 
@@ -112,8 +130,18 @@ public class GameScreen implements Screen {
             @Override
             public void run() {
                 player.shoot(); // Dispara una bala
+                moveTargetsRandomly();
+                elapsedTime++;
             }
         }, 0, 1);
+    }
+
+    // Método para mover todos los targets aleatoriamente
+    private void moveTargetsRandomly() {
+        for (Target target : targets) {
+            Vector2 newPosition = generateRandomPosition(Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+            target.setPosition(newPosition.x, newPosition.y);  // Actualiza la posición del Target
+        }
     }
 
     @Override
@@ -127,7 +155,7 @@ public class GameScreen implements Screen {
 
         // Verifica si el tiempo se ha agotado
         if (timeRemaining <= 0) {
-            game.setScreen(new SplashScreen(game)); // Cambia a SplashScreen
+            game.setScreen(new GameOver(game, elapsedTime, coinsCollected)); // Cambia a SplashScreen
             dispose();
             return; // Sal del método para evitar errores
         }
@@ -203,6 +231,8 @@ public class GameScreen implements Screen {
             timeCoins.removeValue(coin, true); // Elimina la moneda de la lista
         }
 
+        checkAndRemoveTargets(Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+
         // Dibuixem tots els actors de l'stage
         stage.act(delta);
         stage.draw();
@@ -220,6 +250,38 @@ public class GameScreen implements Screen {
         AssetManager.font.draw(batch, "" + timeRemaining, TimeTextX, TimeTextY);
         batch.end();
     }
+
+    private void checkAndRemoveTargets(float worldWidth, float worldHeight) {
+        Array<Target> targetsToRemove = new Array<>(); // Lista temporal para almacenar los targets a eliminar
+        for (Target target : targets) {
+            if (target.getCollisionRect().overlaps(player.getCollisionRect())) {
+                targetsToRemove.add(target); // Marcar el target para eliminar
+
+                // Restar 10 segundos al temporizador
+                timeRemaining -= 10;
+                if (timeRemaining < 0) {
+                    timeRemaining = 0; // Evitar que el tiempo sea negativo
+                }
+
+                // Generar una nueva posición aleatoria para el target
+                Vector2 newPosition = generateRandomPosition(worldWidth, worldHeight);
+                target.setPosition(newPosition.x, newPosition.y); // Actualiza la posición del target
+            }
+        }
+
+        // Eliminar los targets de la escena y la lista
+        for (Target target : targetsToRemove) {
+            target.remove(); // Elimina el target de la escena
+            targets.removeValue(target, true); // Elimina el target de la lista
+
+            // Crear un nuevo target para reemplazarlo
+            Vector2 newPosition = generateRandomPosition(worldWidth, worldHeight);
+            Target newTarget = new Target(newPosition.x, newPosition.y, Settings.TARGET_WIDTH, Settings.TARGET_HEIGHT);
+            targets.add(newTarget); // Añadir el nuevo target a la lista
+            stage.addActor(newTarget); // Añadir el nuevo target a la escena
+        }
+    }
+
 
     @Override
     public void resize(int width, int height) {

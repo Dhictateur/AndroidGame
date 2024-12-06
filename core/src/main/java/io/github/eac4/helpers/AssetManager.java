@@ -23,6 +23,7 @@ public class AssetManager {
     public static TextureRegion playerUp;
     public static TextureRegion playerRight;
     public static TextureRegion playerLeft;
+    public static TextureRegion target;
     public static TiledMap background;
     public static Music backgroundMusic;
 
@@ -46,6 +47,9 @@ public class AssetManager {
 
         player = new TextureRegion(sheet, 16, 0, 16, 24);
         player.flip(false, true);
+
+        target = new TextureRegion(sheet, 0, 144, 14, 14);
+        target.flip(false, true);
 
         // Extraer frames para las animaciones
         TextureRegion[] downFrames = new TextureRegion[3];
