@@ -232,6 +232,8 @@ public class GameScreen implements Screen {
         }
 
         checkAndRemoveTargets(Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+        checkBulletCollisions(Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+
 
         // Dibuixem tots els actors de l'stage
         stage.act(delta);
@@ -280,6 +282,35 @@ public class GameScreen implements Screen {
             targets.add(newTarget); // Añadir el nuevo target a la lista
             stage.addActor(newTarget); // Añadir el nuevo target a la escena
         }
+    }
+
+    private void checkBulletCollisions(float worldWidth, float worldHeight) {
+        for (Bullet bullet : player.activeBullets) {
+            for (Target target : targets) {
+                if (bullet.getCollisionRect().overlaps(target.getCollisionRect())) {
+                    // Si hay colisión, agregar 10 puntos
+                    coinsCollected += 10;
+
+                    // Opcionalmente, eliminar el target (o realizar otras acciones)
+                    target.remove();
+                    targets.removeValue(target, true);
+
+                    // Crear un nuevo target para reemplazarlo
+                    Vector2 newPosition = generateRandomPosition(worldWidth, worldHeight);
+                    Target newTarget = new Target(newPosition.x, newPosition.y, Settings.TARGET_WIDTH, Settings.TARGET_HEIGHT);
+                    targets.add(newTarget); // Añadir el nuevo target a la lista
+                    stage.addActor(newTarget); // Añadir el nuevo target a la escena
+
+                    // Liberar la bala al pool
+                    Player.getBulletPool().free(bullet);
+                    bullet.remove(); // Eliminar la bala del escenario
+                }
+            }
+        }
+    }
+
+    private void colisionBullet () {
+
     }
 
 

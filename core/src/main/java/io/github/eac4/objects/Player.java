@@ -32,6 +32,7 @@ public class Player extends Actor {
 
     private Array<Bullet> bullets;
     private static Pool<Bullet> bulletPool;
+    public Array<Bullet> activeBullets = new Array<>();
 
     // Constructor de la clase Player
     public Player(float x, float y, int width, int height) {
@@ -176,7 +177,7 @@ public class Player extends Actor {
     public void shoot() {
         Gdx.app.log("BulletPool", "Balas disponibles: " + bulletPool.getFree());
         if (bulletPool.getFree() > 0) {
-            float bulletSpeed = 10f; // Velocidad de la bala
+            float bulletSpeed = 20f; // Velocidad de la bala
             float bulletWidth = Settings.BULLET_WIDTH;
             float bulletHeight = Settings.BULLET_HEIGHT;
 
@@ -184,13 +185,35 @@ public class Player extends Actor {
             float playerCenterX = this.getX() + this.getWidth() / 2 - bulletWidth / 2;
             float playerCenterY = this.getY() + this.getHeight() / 2 - bulletHeight / 2;
 
-            // Generar una dirección aleatoria para la bala
-            float randomAngle = (float) (Math.random() * 2 * Math.PI); // Ángulo aleatorio en radianes
-            float dx = (float) Math.cos(randomAngle) * bulletSpeed;    // Velocidad en X
-            float dy = (float) Math.sin(randomAngle) * bulletSpeed;    // Velocidad en Y
-
             Bullet bullet = bulletPool.obtain();
+
+            float dx = 0f;
+            float dy = 0f;
+
+            // Determina la dirección en la que disparar
+            switch (direction) {
+                case PLAYER_UP:
+                    dy = -bulletSpeed;  // Disparar hacia arriba
+                    break;
+                case PLAYER_DOWN:
+                    dy = bulletSpeed; // Disparar hacia abajo
+                    break;
+                case PLAYER_RIGHT:
+                    dx = bulletSpeed;  // Disparar hacia la derecha
+                    break;
+                case PLAYER_LEFT:
+                    dx = -bulletSpeed; // Disparar hacia la izquierda
+                    break;
+                case PLAYER_STILL:
+                    // Generar una dirección aleatoria si el jugador está quieto
+                    float randomAngle = (float) (Math.random() * 2 * Math.PI); // Ángulo aleatorio en radianes
+                    dx = (float) Math.cos(randomAngle) * bulletSpeed;  // Velocidad en X aleatoria
+                    dy = (float) Math.sin(randomAngle) * bulletSpeed;  // Velocidad en Y aleatoria
+                    break;
+            }
+
             bullet.init(playerCenterX, playerCenterY, dx, dy); // Inicializar la bala reciclada
+            activeBullets.add(bullet);
 
             // Añadir la bala al escenario
             getStage().addActor(bullet);
