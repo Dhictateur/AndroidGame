@@ -1,5 +1,6 @@
 package io.github.eac4.objects;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
 
 import io.github.eac4.helpers.AssetManager;
 import io.github.eac4.utils.Settings;
@@ -29,6 +31,7 @@ public class Player extends Actor {
     private float stateTime;
 
     private Array<Bullet> bullets;
+    private static Pool<Bullet> bulletPool;
 
     // Constructor de la clase Player
     public Player(float x, float y, int width, int height) {
@@ -45,6 +48,25 @@ public class Player extends Actor {
         setTouchable(Touchable.enabled);
 
         bullets = new Array<>();
+
+        bulletPool = new Pool<Bullet>(2) { // Máximo 2 balas activas
+            @Override
+            public Bullet newObject() {
+                return new Bullet(0, 0, Settings.BULLET_WIDTH, Settings.BULLET_HEIGHT, 0, 0);
+            }
+
+            @Override
+            protected void reset(Bullet bullet) {
+                bullet.setVisible(false); // Ocultar la bala reciclada
+            }
+        };
+
+        // Asegúrate de que el Pool tenga 2 balas disponibles desde el principio
+        for (int i = 0; i < 2; i++) {
+            Bullet bullet = new Bullet(0, 0, Settings.BULLET_WIDTH, Settings.BULLET_HEIGHT, 0, 0); // Crear balas manualmente
+            bullet.setVisible(false); // Hacerlas invisibles
+            bulletPool.free(bullet);  // Agregar la bala al pool
+        }
     }
 
     @Override
@@ -152,23 +174,43 @@ public class Player extends Actor {
     }
 
     public void shoot() {
-        float bulletSpeed = 15f; // Velocidad de la bala
-        float bulletWidth = Settings.BULLET_WIDTH;
-        float bulletHeight = Settings.BULLET_HEIGHT;
+        Gdx.app.log("BulletPool", "Balas disponibles: " + bulletPool.getFree());
+        if (bulletPool.getFree() > 0) {
+            float bulletSpeed = 10f; // Velocidad de la bala
+            float bulletWidth = Settings.BULLET_WIDTH;
+            float bulletHeight = Settings.BULLET_HEIGHT;
 
-        // Obtén la posición actual del jugador
-        float playerCenterX = this.getX() + this.getWidth() / 2 - bulletWidth / 2;
-        float playerCenterY = this.getY() + this.getHeight() / 2 - bulletHeight / 2;
+            // Obtén la posición actual del jugador
+            float playerCenterX = this.getX() + this.getWidth() / 2 - bulletWidth / 2;
+            float playerCenterY = this.getY() + this.getHeight() / 2 - bulletHeight / 2;
 
-        // Generar una dirección aleatoria para la bala
-        float randomAngle = (float) (Math.random() * 2 * Math.PI); // Ángulo aleatorio en radianes
-        float dx = (float) Math.cos(randomAngle) * bulletSpeed;    // Velocidad en X
-        float dy = (float) Math.sin(randomAngle) * bulletSpeed;    // Velocidad en Y
+            // Generar una dirección aleatoria para la bala
+            float randomAngle = (float) (Math.random() * 2 * Math.PI); // Ángulo aleatorio en radianes
+            float dx = (float) Math.cos(randomAngle) * bulletSpeed;    // Velocidad en X
+            float dy = (float) Math.sin(randomAngle) * bulletSpeed;    // Velocidad en Y
 
-        // Crear la bala usando la posición actual del jugador
-        Bullet bullet = new Bullet(playerCenterX, playerCenterY, bulletWidth, bulletHeight, dx, dy);
+            Bullet bullet = bulletPool.obtain();
+            bullet.init(playerCenterX, playerCenterY, dx, dy); // Inicializar la bala reciclada
 
-        bullets.add(bullet); // Añadir la bala a la lista de balas
-        getStage().addActor(bullet); // Añadir la bala al escenario
+            // Añadir la bala al escenario
+            getStage().addActor(bullet);
+        } else {
+            Gdx.app.log("BulletPool", "No hay balas disponibles");
+        }
+    }
+
+    public static Pool<Bullet> getBulletPool() {
+        return bulletPool;
+    }
+
+    public Player findPlayer() {
+        Actor current = this;
+        while (current != null) {
+            if (current instanceof Player) {
+                return (Player) current;
+            }
+            current = current.getParent();
+        }
+        return null; // No se encontró un jugador
     }
 }
